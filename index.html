@@ -12,8 +12,13 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--ground);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;-webkit-text-size-adjust:100%}
   header{background:var(--olive);color:var(--ground);padding:18px 20px 14px}
+  .htop{display:flex;align-items:flex-start;gap:10px}
+  .htop .ttl{flex:1}
   header .sub{font-size:12px;letter-spacing:.12em;opacity:.85}
   header h1{margin:4px 0 0;font-family:"Shippori Mincho",serif;font-size:22px}
+  .langsw{display:flex;border:1px solid rgba(246,241,231,.6);border-radius:16px;overflow:hidden;flex:0 0 auto}
+  .langsw button{height:32px;padding:0 10px;border:none;background:transparent;color:var(--ground);font:inherit;font-size:12px;cursor:pointer}
+  .langsw button.on{background:var(--ground);color:var(--olive);font-weight:700}
   .bar{display:flex;gap:6px;margin-top:10px}.bar i{flex:1;height:4px;border-radius:2px;background:rgba(246,241,231,.3)}.bar i.on{background:#E9C9A0}
   main{padding:20px 16px 120px;max-width:520px;margin:0 auto}
   h2{font-size:15px;margin:22px 0 10px}
@@ -51,59 +56,64 @@
 </head>
 <body>
 <header>
-  <div class="sub">パレスチナ料理</div>
-  <h1>Bisan 京都店　席のご予約</h1>
+  <div class="htop">
+    <div class="ttl">
+      <div class="sub" data-i="sub">パレスチナ料理</div>
+      <h1 data-i="title">Bisan 京都店　席のご予約</h1>
+    </div>
+    <div class="langsw" role="group" aria-label="Language">
+      <button data-lang="ja" class="on">日本語</button>
+      <button data-lang="en">English</button>
+    </div>
+  </div>
   <div class="bar"><i class="on" id="b1"></i><i id="b2"></i><i id="b3"></i></div>
 </header>
 
 <main>
-  <div id="loading" class="loading">読み込み中…</div>
+  <div id="loading" class="loading" data-i="loading">読み込み中…</div>
 
-  <!-- STEP1 日時・人数 -->
   <section id="step1" class="hide">
-    <h2>1. 日付</h2>
+    <h2 data-i="h_date">1. 日付</h2>
     <div class="days" id="days"></div>
-    <div class="note">火曜は定休日です。金・土は夜（〜21:00）も営業しています。</div>
+    <div class="note" data-i="n_date">火曜は定休日です。金・土は夜（〜21:00）も営業しています。</div>
 
-    <h2>2. 人数</h2>
+    <h2 data-i="h_people">2. 人数</h2>
     <div class="people">
-      <button class="round" id="minus" aria-label="人数を減らす">−</button>
-      <output id="people">2 名</output>
-      <button class="round fill" id="plus" aria-label="人数を増やす">＋</button>
+      <button class="round" id="minus" aria-label="−">−</button>
+      <output id="people"></output>
+      <button class="round fill" id="plus" aria-label="＋">＋</button>
     </div>
     <div class="note" id="maxNote"></div>
 
-    <h2 id="timeTitle">3. 時間</h2>
+    <h2 id="timeTitle"></h2>
     <div class="slots" id="slots"></div>
     <div class="note" id="slotNote"></div>
   </section>
 
-  <!-- STEP2 お客様情報 -->
   <section id="step2" class="hide">
-    <div class="card"><div class="k">ご予約内容</div><div class="v" id="summary"></div></div>
-    <label for="nm">お名前</label>
-    <input id="nm" type="text" autocomplete="name" placeholder="例）山田 花子">
-    <label for="tel">電話番号</label>
-    <input id="tel" type="tel" autocomplete="tel" placeholder="例）090-1234-5678">
-    <label for="memo">ご要望（任意）</label>
-    <textarea id="memo" rows="3" placeholder="アレルギー、ベジタリアン、お祝いなど"></textarea>
-    <div class="info">この予約はリクエストです。お店が確認して、このLINEに確定のご連絡をお送りします。</div>
+    <div class="card"><div class="k" data-i="summary">ご予約内容</div><div class="v" id="summary"></div></div>
+    <label for="nm" data-i="l_name">お名前</label>
+    <input id="nm" type="text" autocomplete="name">
+    <label for="tel" data-i="l_tel">電話番号</label>
+    <input id="tel" type="tel" autocomplete="tel">
+    <label for="memo" data-i="l_memo">ご要望（任意）</label>
+    <textarea id="memo" rows="3"></textarea>
+    <div class="info" data-i="info">この予約はリクエストです。お店が確認して、このLINEに確定のご連絡をお送りします。</div>
   </section>
 
-  <!-- STEP3 完了 -->
   <section id="step3" class="hide done">
     <div class="ok"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg></div>
-    <h3>リクエストを受け付けました</h3>
+    <h3 data-i="done_t">リクエストを受け付けました</h3>
     <div class="card"><div class="v" id="doneWhen"></div></div>
-    <p style="font-size:14px;line-height:1.8">まだ予約は確定していません。<br>お店が確認後、このLINEに<br>「予約確定」のメッセージをお送りします。</p>
+    <p style="font-size:14px;line-height:1.8" data-i="done_p"></p>
   </section>
 
   <div class="err" id="err" role="alert"></div>
 </main>
 
 <footer id="foot" class="hide">
-  <button class="btn sub hide" id="back">戻る</button>
-  <button class="btn main" id="next" disabled>次へ（お客様情報）</button>
+  <button class="btn sub hide" id="back"></button>
+  <button class="btn main" id="next" disabled></button>
 </footer>
 
 <script>
@@ -114,9 +124,62 @@ var CONFIG = {
 };
 /* ===================== */
 
-var state = { step: 1, date: null, time: null, people: 2, maxPeople: 8, days: [], slots: [] };
-var $ = function (id) { return document.getElementById(id); };
+var TEXT = {
+  ja: {
+    sub: 'パレスチナ料理', title: 'Bisan 京都店　席のご予約', loading: '読み込み中…',
+    h_date: '1. 日付', n_date: '火曜は定休日です。金・土は夜（〜21:00）も営業しています。', h_people: '2. 人数',
+    h_time: '3. 時間', summary: 'ご予約内容', l_name: 'お名前', l_tel: '電話番号', l_memo: 'ご要望（任意）',
+    ph_name: '例）山田 花子', ph_tel: '例）090-1234-5678', ph_memo: 'アレルギー、ベジタリアン、お祝いなど',
+    info: 'この予約はリクエストです。お店が確認して、このLINEに確定のご連絡をお送りします。',
+    done_t: 'リクエストを受け付けました',
+    done_p: 'まだ予約は確定していません。<br>お店が確認後、このLINEに<br>「予約確定」のメッセージをお送りします。',
+    next1: '次へ（お客様情報）', next2: '予約をリクエストする', sending: '送信中…', back: '戻る',
+    persons: function (n) { return n + ' 名'; }, maxNote: function (n) { return (n + 1) + '名以上はLINEのトークでご相談ください。'; },
+    lunch: 'ランチ', cafe: 'カフェ', dinner: 'ディナー', full: '満席', left: function (n) { return '残' + n + '席'; },
+    checking: '空き状況を確認中…', noSlot: 'この日は空きがありません。別の日をお選びください。',
+    needName: 'お名前と電話番号を入れてください。', slotErr: '空き状況を読み込めませんでした。',
+    loadErr: '読み込めませんでした。LINEアプリから開き直してください。', closed: '休業',
+    dayLabel: function (d) { return d.md + '（' + d.wd + '）'; }
+  },
+  en: {
+    sub: 'Palestinian cuisine', title: 'Bisan Kyoto — Table reservation', loading: 'Loading…',
+    h_date: '1. Date', n_date: 'Closed on Tuesdays. Open for dinner (until 21:00) on Fridays and Saturdays.', h_people: '2. Guests',
+    h_time: '3. Time', summary: 'Your reservation', l_name: 'Name', l_tel: 'Phone number', l_memo: 'Requests (optional)',
+    ph_name: 'e.g. Jane Smith', ph_tel: 'e.g. 090-1234-5678', ph_memo: 'Allergies, vegetarian, celebrations, etc.',
+    info: 'This is a reservation request. We will check availability and send a confirmation to this LINE chat.',
+    done_t: 'Request received',
+    done_p: 'Your reservation is not confirmed yet.<br>We will send a confirmation message<br>to this LINE chat after checking.',
+    next1: 'Next (your details)', next2: 'Send request', sending: 'Sending…', back: 'Back',
+    persons: function (n) { return n + (n > 1 ? ' guests' : ' guest'); }, maxNote: function (n) { return 'For ' + (n + 1) + ' or more guests, please contact us in the LINE chat.'; },
+    lunch: 'Lunch', cafe: 'Café', dinner: 'Dinner', full: 'Full', left: function (n) { return n + ' left'; },
+    checking: 'Checking availability…', noSlot: 'No availability on this day. Please choose another date.',
+    needName: 'Please enter your name and phone number.', slotErr: 'Could not load availability. ',
+    loadErr: 'Could not load. Please reopen this page from the LINE app.', closed: 'closed',
+    dayLabel: function (d) { return d.wdEn + ', ' + d.md; }
+  }
+};
 
+var state = { step: 1, date: null, time: null, people: 2, maxPeople: 8, days: [], slots: [], lang: 'ja', ready: false };
+var $ = function (id) { return document.getElementById(id); };
+function T(k) { return TEXT[state.lang][k]; }
+
+function applyLang() {
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll('[data-i]').forEach(function (el) {
+    var k = el.getAttribute('data-i'); if (k === 'done_p') el.innerHTML = T(k); else el.textContent = T(k);
+  });
+  document.querySelectorAll('.langsw button').forEach(function (b) { b.classList.toggle('on', b.dataset.lang === state.lang); });
+  $('nm').placeholder = T('ph_name'); $('tel').placeholder = T('ph_tel'); $('memo').placeholder = T('ph_memo');
+  $('back').textContent = T('back');
+  $('people').textContent = T('persons')(state.people);
+  $('maxNote').textContent = state.ready ? T('maxNote')(state.maxPeople) : '';
+  document.title = T('title');
+  if (state.ready) { renderDays(); updateTimeTitle(); renderSlots(); }
+  setNextLabel();
+  if (state.step === 2) $('summary').textContent = whenLabel();
+}
+
+function setNextLabel() { $('next').textContent = state.step === 1 ? T('next1') : T('next2'); }
 function showErr(msg) { $('err').textContent = msg || ''; }
 
 function api(params) {
@@ -130,16 +193,18 @@ function setStep(n) {
   $('b2').classList.toggle('on', n >= 2); $('b3').classList.toggle('on', n >= 3);
   $('foot').classList.toggle('hide', n === 3);
   $('back').classList.toggle('hide', n !== 2);
-  $('next').textContent = n === 1 ? '次へ（お客様情報）' : '予約をリクエストする';
+  setNextLabel();
   $('next').disabled = n === 1 ? !state.time : false;
   showErr('');
   window.scrollTo(0, 0);
 }
 
+function curDay() { return state.days.filter(function (x) { return x.date === state.date; })[0]; }
 function whenLabel() {
-  var d = state.days.filter(function (x) { return x.date === state.date; })[0];
-  return d ? d.md + '（' + d.wd + '） ' + (state.time || '') + '　' + state.people + '名' : '';
+  var d = curDay();
+  return d ? T('dayLabel')(d) + '  ' + (state.time || '') + '　' + T('persons')(state.people) : '';
 }
+function updateTimeTitle() { var d = curDay(); $('timeTitle').textContent = T('h_time') + (d ? '（' + T('dayLabel')(d) + '）' : ''); }
 
 function renderDays() {
   var box = $('days'); box.innerHTML = '';
@@ -147,8 +212,8 @@ function renderDays() {
     var b = document.createElement('button');
     b.className = 'chip' + (d.date === state.date ? ' sel' : '');
     b.disabled = !d.open;
-    b.setAttribute('aria-label', d.md + '（' + d.wd + '）' + (d.open ? '' : ' 休業'));
-    b.innerHTML = '<small>' + d.wd + '</small><b>' + d.md + '</b>';
+    b.setAttribute('aria-label', T('dayLabel')(d) + (d.open ? '' : ' ' + T('closed')));
+    b.innerHTML = '<small>' + (state.lang === 'en' ? d.wdEn : d.wd) + '</small><b>' + d.md + '</b>';
     b.onclick = function () { state.date = d.date; state.time = null; renderDays(); loadSlots(); };
     box.appendChild(b);
   });
@@ -161,31 +226,30 @@ function renderSlots() {
     var ok = s.left >= state.people;
     if (ok) any = true;
     var h = Number(s.time.split(':')[0]);
-    var kind = h >= 17 ? 'ディナー' : (h >= 14 ? 'カフェ' : 'ランチ');
+    var kind = h >= 17 ? T('dinner') : (h >= 14 ? T('cafe') : T('lunch'));
     var b = document.createElement('button');
     b.className = 'slot' + (s.time === state.time ? ' sel' : '');
     b.disabled = !ok;
-    b.innerHTML = '<span>' + s.time + '</span><small>' + (ok ? kind : (s.left > 0 ? '残' + s.left + '席' : '満席')) + '</small>';
+    b.innerHTML = '<span>' + s.time + '</span><small>' + (ok ? kind : (s.left > 0 ? T('left')(s.left) : T('full'))) + '</small>';
     b.onclick = function () { state.time = s.time; renderSlots(); $('next').disabled = false; };
     box.appendChild(b);
   });
-  $('slotNote').textContent = state.slots.length && !any ? 'この日は空きがありません。別の日をお選びください。' : '';
-  $('next').disabled = !state.time;
+  $('slotNote').textContent = state.slots.length && !any ? T('noSlot') : '';
+  $('next').disabled = state.step === 1 && !state.time;
 }
 
 function loadSlots() {
-  $('slots').innerHTML = '<div class="note">空き状況を確認中…</div>';
-  var d = state.days.filter(function (x) { return x.date === state.date; })[0];
-  $('timeTitle').textContent = '3. 時間（' + d.md + '・' + d.wd + '）';
+  $('slots').innerHTML = '<div class="note">' + T('checking') + '</div>';
+  updateTimeTitle();
   api({ action: 'slots', date: state.date }).then(function (res) {
     if (!res.ok) throw new Error(res.error);
     state.slots = res.slots; renderSlots();
-  }).catch(function (e) { showErr('空き状況を読み込めませんでした。' + e.message); });
+  }).catch(function (e) { showErr(T('slotErr') + e.message); });
 }
 
 function setPeople(n) {
   state.people = Math.max(1, Math.min(state.maxPeople, n));
-  $('people').textContent = state.people + ' 名';
+  $('people').textContent = T('persons')(state.people);
   if (state.time) {
     var s = state.slots.filter(function (x) { return x.time === state.time; })[0];
     if (!s || s.left < state.people) state.time = null;
@@ -195,10 +259,10 @@ function setPeople(n) {
 
 function submit() {
   var name = $('nm').value.trim(), tel = $('tel').value.trim();
-  if (!name || !tel) { showErr('お名前と電話番号を入れてください。'); return; }
-  $('next').disabled = true; $('next').textContent = '送信中…';
+  if (!name || !tel) { showErr(T('needName')); return; }
+  $('next').disabled = true; $('next').textContent = T('sending');
   var body = {
-    action: 'reserve', idToken: liff.getIDToken(), date: state.date, time: state.time,
+    action: 'reserve', idToken: liff.getIDToken(), date: state.date, time: state.time, lang: state.lang,
     people: state.people, name: name, tel: tel, memo: $('memo').value.trim()
   };
   fetch(CONFIG.GAS_URL, { method: 'POST', body: JSON.stringify(body) })
@@ -209,11 +273,14 @@ function submit() {
       setStep(3);
     })
     .catch(function (e) {
-      showErr(e.message || '送信できませんでした。');
-      $('next').disabled = false; $('next').textContent = '予約をリクエストする';
+      showErr(e.message || '');
+      $('next').disabled = false; setNextLabel();
     });
 }
 
+document.querySelectorAll('.langsw button').forEach(function (b) {
+  b.onclick = function () { state.lang = b.dataset.lang; try { localStorage.setItem('bisanLang', state.lang); } catch (e) {} applyLang(); };
+});
 $('minus').onclick = function () { setPeople(state.people - 1); };
 $('plus').onclick = function () { setPeople(state.people + 1); };
 $('back').onclick = function () { setStep(1); };
@@ -222,21 +289,29 @@ $('next').onclick = function () {
   else if (state.step === 2) submit();
 };
 
+// 言語の初期値：前回選んだ言語 → LINEの言語設定（日本語以外なら英語）
+(function () {
+  var saved = null; try { saved = localStorage.getItem('bisanLang'); } catch (e) {}
+  state.lang = saved === 'en' || saved === 'ja' ? saved : ((navigator.language || 'ja').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en');
+  applyLang();
+})();
+
 liff.init({ liffId: CONFIG.LIFF_ID }).then(function () {
   if (!liff.isLoggedIn()) { liff.login(); return; }
-  return liff.getProfile().then(function (p) {
-    if (p && p.displayName && !$('nm').value) $('nm').placeholder = '例）' + p.displayName;
-  }).catch(function () {}).then(function () { return api({ action: 'days' }); });
+  var saved = null; try { saved = localStorage.getItem('bisanLang'); } catch (e) {}
+  if (!saved && liff.getLanguage) { state.lang = String(liff.getLanguage() || 'ja').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en'; applyLang(); }
+  return api({ action: 'days' });
 }).then(function (res) {
   if (!res) return;
   if (!res.ok) throw new Error(res.error);
-  state.days = res.days; state.maxPeople = res.maxPeople;
-  $('maxNote').textContent = (res.maxPeople + 1) + '名以上はLINEのトークでご相談ください。';
+  state.days = res.days; state.maxPeople = res.maxPeople; state.ready = true;
   var first = res.days.filter(function (d) { return d.open; })[0];
   $('loading').classList.add('hide'); $('step1').classList.remove('hide'); $('foot').classList.remove('hide');
-  if (first) { state.date = first.date; renderDays(); loadSlots(); } else renderDays();
+  if (first) state.date = first.date;
+  applyLang();
+  if (first) loadSlots();
 }).catch(function (e) {
-  $('loading').textContent = '読み込めませんでした。LINEアプリから開き直してください。（' + e.message + '）';
+  $('loading').textContent = T('loadErr') + '（' + e.message + '）';
 });
 </script>
 </body>
