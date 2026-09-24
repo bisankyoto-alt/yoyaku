@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bisan 京都店 席のご予約</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <style>
   :root{--olive:#3F5234;--clay:#8C3B22;--ground:#F6F1E7;--ink:#231F1A;--muted:#5E574D;--line:#DDD3C2;--off:#E6E0D5;--offText:#8F877B}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--ground);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;-webkit-text-size-adjust:100%}
   header{background:var(--olive);color:var(--ground);padding:18px 20px 14px}
   .htop{display:flex;align-items:flex-start;gap:10px}
   .htop .ttl{flex:1}
   header .sub{font-size:12px;letter-spacing:.12em;opacity:.85}
-  header h1{margin:4px 0 0;font-family:"Shippori Mincho",serif;font-size:22px}
+  header h1{margin:4px 0 0;font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:22px}
   .langsw{display:flex;border:1px solid rgba(246,241,231,.6);border-radius:16px;overflow:hidden;flex:0 0 auto}
   .langsw button{height:32px;padding:0 10px;border:none;background:transparent;color:var(--ground);font:inherit;font-size:12px;cursor:pointer}
   .langsw button.on{background:var(--ground);color:var(--olive);font-weight:700}
@@ -48,7 +48,7 @@
   .btn.sub{width:110px;background:#fff;border:1px solid var(--olive);color:var(--olive)}
   .done{text-align:center;padding-top:20px}
   .done .ok{width:72px;height:72px;border-radius:36px;background:var(--olive);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
-  .done h3{font-family:"Shippori Mincho",serif;font-size:22px;margin:0 0 16px}
+  .done h3{font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;font-size:22px;margin:0 0 16px}
   .err{color:var(--clay);font-size:14px;font-weight:700;margin-top:12px;min-height:1em}
   .hide{display:none!important}
   .loading{padding:40px 0;text-align:center;color:var(--muted)}
@@ -133,10 +133,10 @@ var TEXT = {
     info: 'この予約はリクエストです。お店が確認して、このLINEに確定のご連絡をお送りします。',
     done_t: 'リクエストを受け付けました',
     done_p: 'まだ予約は確定していません。<br>お店が確認後、このLINEに<br>「予約確定」のメッセージをお送りします。',
-    next1: '次へ（お客様情報）', next2: '予約をリクエストする', sending: '送信中…', back: '戻る',
+    next1: '次へ（お客様情報）', next2: '予約をリクエストする', sending: '送信中…数秒お待ちください', back: '戻る',
     persons: function (n) { return n + ' 名'; }, maxNote: function (n) { return (n + 1) + '名以上はLINEのトークでご相談ください。'; },
     lunch: 'ランチ', cafe: 'カフェ', dinner: 'ディナー', full: '満席', left: function (n) { return '残' + n + '席'; },
-    checking: '空き状況を確認中…', noSlot: 'この日は空きがありません。別の日をお選びください。',
+    checking: '空き状況を確認中…', checkingShort: '確認中…', noSlot: 'この日は空きがありません。別の日をお選びください。',
     needName: 'お名前と電話番号を入れてください。', slotErr: '空き状況を読み込めませんでした。',
     loadErr: '読み込めませんでした。LINEアプリから開き直してください。', closed: '休業',
     dayLabel: function (d) { return d.md + '（' + d.wd + '）'; }
@@ -149,10 +149,10 @@ var TEXT = {
     info: 'This is a reservation request. We will check availability and send a confirmation to this LINE chat.',
     done_t: 'Request received',
     done_p: 'Your reservation is not confirmed yet.<br>We will send a confirmation message<br>to this LINE chat after checking.',
-    next1: 'Next (your details)', next2: 'Send request', sending: 'Sending…', back: 'Back',
+    next1: 'Next (your details)', next2: 'Send request', sending: 'Sending… please wait', back: 'Back',
     persons: function (n) { return n + (n > 1 ? ' guests' : ' guest'); }, maxNote: function (n) { return 'For ' + (n + 1) + ' or more guests, please contact us in the LINE chat.'; },
     lunch: 'Lunch', cafe: 'Café', dinner: 'Dinner', full: 'Full', left: function (n) { return n + ' left'; },
-    checking: 'Checking availability…', noSlot: 'No availability on this day. Please choose another date.',
+    checking: 'Checking availability…', checkingShort: 'checking…', noSlot: 'No availability on this day. Please choose another date.',
     needName: 'Please enter your name and phone number.', slotErr: 'Could not load availability. ',
     loadErr: 'Could not load. Please reopen this page from the LINE app.', closed: 'closed',
     dayLabel: function (d) { return d.wdEn + ', ' + d.md; }
@@ -223,14 +223,15 @@ function renderSlots() {
   var box = $('slots'); box.innerHTML = '';
   var any = false;
   state.slots.forEach(function (s) {
-    var ok = s.left >= state.people;
-    if (ok) any = true;
+    var unknown = s.left === null || s.left === undefined;
+    var ok = !unknown && s.left >= state.people;
+    if (ok || unknown) any = true;
     var h = Number(s.time.split(':')[0]);
     var kind = h >= 17 ? T('dinner') : (h >= 14 ? T('cafe') : T('lunch'));
     var b = document.createElement('button');
     b.className = 'slot' + (s.time === state.time ? ' sel' : '');
     b.disabled = !ok;
-    b.innerHTML = '<span>' + s.time + '</span><small>' + (ok ? kind : (s.left > 0 ? T('left')(s.left) : T('full'))) + '</small>';
+    b.innerHTML = '<span>' + s.time + '</span><small>' + (unknown ? T('checkingShort') : ok ? kind : (s.left > 0 ? T('left')(s.left) : T('full'))) + '</small>';
     b.onclick = function () { state.time = s.time; renderSlots(); $('next').disabled = false; };
     box.appendChild(b);
   });
@@ -238,13 +239,66 @@ function renderSlots() {
   $('next').disabled = state.step === 1 && !state.time;
 }
 
+// 空き状況は最初にまとめて取得済みなので、日付を押したら待たずに表示する
 function loadSlots() {
-  $('slots').innerHTML = '<div class="note">' + T('checking') + '</div>';
+  var d = curDay();
+  state.slots = d && d.slots ? d.slots : [];
   updateTimeTitle();
-  api({ action: 'slots', date: state.date }).then(function (res) {
+  renderSlots();
+}
+
+// 今日の日付（日本時間）
+function todayStr() {
+  var n = new Date(Date.now() + (9 * 60 + new Date().getTimezoneOffset()) * 60000);
+  return n.getFullYear() + '-' + ('0' + (n.getMonth() + 1)).slice(-2) + '-' + ('0' + n.getDate()).slice(-2);
+}
+
+// 空き状況データを画面に反映（保存しておいた前回分・最新分の両方で使う）
+function setData(res) {
+  var t = todayStr();
+  state.days = (res.days || []).filter(function (d) { return d.date >= t; });
+  state.maxPeople = res.maxPeople || 8;
+  state.ready = true;
+  var cur = curDay();
+  if (!cur || !cur.open) {
+    var first = state.days.filter(function (d) { return d.open; })[0];
+    state.date = first ? first.date : null;
+    state.time = null;
+  }
+  if (state.time) {
+    var s = ((curDay() || {}).slots || []).filter(function (x) { return x.time === state.time; })[0];
+    if (!s || s.left < state.people) state.time = null;
+  }
+  $('loading').classList.add('hide');
+  if (state.step === 1) { $('step1').classList.remove('hide'); $('foot').classList.remove('hide'); }
+  applyLang();
+  loadSlots();
+}
+
+// Google の返事を待たずに、営業時間どおりのカレンダーを先に表示する（空き状況は「確認中」）
+var BASE_TIMES = ['11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '15:00', '16:00'];
+var NIGHT_TIMES = ['17:00', '18:00', '19:00'];
+function localDays() {
+  var WD = ['日', '月', '火', '水', '木', '金', '土'], WDE = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  var t = todayStr().split('-'), base = new Date(Number(t[0]), Number(t[1]) - 1, Number(t[2])), out = [];
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i), w = d.getDay();
+    var ds = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var times = w === 2 ? [] : BASE_TIMES.concat(w === 5 || w === 6 ? NIGHT_TIMES : []);
+    out.push({ date: ds, md: (d.getMonth() + 1) + '/' + d.getDate(), wd: WD[w], wdEn: WDE[w], open: times.length > 0,
+      slots: times.map(function (x) { return { time: x, left: null }; }) });
+  }
+  return { ok: true, days: out, maxPeople: 8, pending: true };
+}
+
+var AVAIL_KEY = 'bisanAvail';
+function refreshAvail() {
+  return api({ action: 'init' }).then(function (res) {
     if (!res.ok) throw new Error(res.error);
-    state.slots = res.slots; renderSlots();
-  }).catch(function (e) { showErr(T('slotErr') + e.message); });
+    try { localStorage.setItem(AVAIL_KEY, JSON.stringify({ t: Date.now(), data: res })); } catch (e) {}
+    setData(res);
+    return res;
+  });
 }
 
 function setPeople(n) {
@@ -261,6 +315,10 @@ function submit() {
   var name = $('nm').value.trim(), tel = $('tel').value.trim();
   if (!name || !tel) { showErr(T('needName')); return; }
   $('next').disabled = true; $('next').textContent = T('sending');
+  liffReady.then(function () { doSubmit(name, tel); });
+}
+
+function doSubmit(name, tel) {
   var body = {
     action: 'reserve', idToken: liff.getIDToken(), date: state.date, time: state.time, lang: state.lang,
     people: state.people, name: name, tel: tel, memo: $('memo').value.trim()
@@ -269,12 +327,14 @@ function submit() {
     .then(function (r) { return r.json(); })
     .then(function (res) {
       if (!res.ok) throw new Error(res.error);
+      try { localStorage.removeItem(AVAIL_KEY); } catch (e) {}
       $('doneWhen').textContent = res.when;
       setStep(3);
     })
     .catch(function (e) {
       showErr(e.message || '');
       $('next').disabled = false; setNextLabel();
+      refreshAvail().catch(function () {}); // 満席になった場合などに備えて空き状況を取り直す
     });
 }
 
@@ -296,22 +356,26 @@ $('next').onclick = function () {
   applyLang();
 })();
 
-liff.init({ liffId: CONFIG.LIFF_ID }).then(function () {
-  if (!liff.isLoggedIn()) { liff.login(); return; }
+// ① 前回保存した空き状況があれば、開いた瞬間に表示（30分以内のもの）
+var shown = false;
+try {
+  var cached = JSON.parse(localStorage.getItem(AVAIL_KEY) || 'null');
+  if (cached && cached.data && Date.now() - cached.t < 30 * 60 * 1000) { setData(cached.data); shown = true; }
+} catch (e) {}
+// 保存分がない初回でも、営業時間どおりのカレンダーをすぐ表示する
+if (!shown) setData(localDays());
+
+// ② 最新の空き状況の取得と、LINEのログイン確認を同時に始める
+refreshAvail().catch(function (e) {
+  showErr(T('slotErr') + '（' + e.message + '）');
+});
+var liffReady = liff.init({ liffId: CONFIG.LIFF_ID }).then(function () {
+  if (!liff.isLoggedIn()) { liff.login(); return new Promise(function () {}); }
   var saved = null; try { saved = localStorage.getItem('bisanLang'); } catch (e) {}
   if (!saved && liff.getLanguage) { state.lang = String(liff.getLanguage() || 'ja').toLowerCase().indexOf('ja') === 0 ? 'ja' : 'en'; applyLang(); }
-  return api({ action: 'days' });
-}).then(function (res) {
-  if (!res) return;
-  if (!res.ok) throw new Error(res.error);
-  state.days = res.days; state.maxPeople = res.maxPeople; state.ready = true;
-  var first = res.days.filter(function (d) { return d.open; })[0];
-  $('loading').classList.add('hide'); $('step1').classList.remove('hide'); $('foot').classList.remove('hide');
-  if (first) state.date = first.date;
-  applyLang();
-  if (first) loadSlots();
 }).catch(function (e) {
-  $('loading').textContent = T('loadErr') + '（' + e.message + '）';
+  showErr(T('loadErr') + '（' + e.message + '）');
+  throw e;
 });
 </script>
 </body>
