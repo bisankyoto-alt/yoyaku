@@ -34,6 +34,7 @@
   .ok{flex:1;border:none;background:var(--olive);color:#fff}
   .ng{width:110px;border:1px solid #8F877B;background:#fff;color:#4A433A}
   .cx{border:1px solid var(--line);background:#fff;color:var(--muted);padding:0 14px}
+  .acts button.armed{background:var(--clay);border-color:var(--clay);color:#fff;width:auto;padding:0 16px}
   .empty{color:var(--muted);text-align:center;padding:40px 0}
   .login{max-width:320px;margin:90px auto;text-align:center;padding:0 16px}
   .login input{width:100%;height:54px;font-size:26px;text-align:center;letter-spacing:.3em;border:1px solid #BFB4A2;border-radius:12px;margin:14px 0}
@@ -120,7 +121,8 @@ function card(x) {
   if (x.memo) meta.push('ご要望：' + esc(x.memo));
   if (x.left !== null && x.left !== undefined && x.status !== 'キャンセル' && x.status !== 'お断り') meta.push('この時間の残り席：' + x.left + ' / ' + DATA.seats);
   meta.push(x.viaLine ? 'LINE予約（' + esc(x.lineName) + '）' : '手入力の予約（LINE通知なし）');
-  if (x.sent) meta.push('通知済み：' + esc(x.sent));
+  if (x.busy) meta.push('<b>保存中…</b>');
+  else if (x.sent) meta.push('通知済み：' + esc(x.sent));
   return '<div class="card"><div class="top"><div class="when">' + esc(x.label) + ' ' + esc(x.time) + '</div>' + badge(x.status) + '</div>' +
     '<div class="who">' + esc(x.name) + ' 様　' + esc(x.people) + '名</div>' +
     '<div class="meta">' + meta.join('<br>') + '</div>' + acts + '</div>';
@@ -156,13 +158,24 @@ document.addEventListener('click', function (e) {
   }
   if (b.dataset.set) {
     var st = b.dataset.set;
-    if (st !== '確定' && !confirm(st + 'にしますか？')) return;
-    b.disabled = true; b.textContent = '送信中…';
+    // お断り・キャンセルは誤操作防止のため2回押しで実行（ブラウザの確認ウィンドウは使わない）
+    if (st !== '確定' && b.dataset.armed !== '1') {
+      b.dataset.armed = '1'; b.classList.add('armed'); b.textContent = 'もう一度押すと' + st;
+      setTimeout(function () { if (b.isConnected && b.dataset.armed === '1') { b.dataset.armed = ''; b.classList.remove('armed'); b.textContent = st === 'お断り' ? 'お断り' : 'キャンセルにする'; } }, 4000);
+      return;
+    }
+    // 画面はすぐ切り替え、保存は裏で行う
+    var item = DATA.list.filter(function (x) { return x.id === b.dataset.id; })[0];
+    var before = item ? item.status : null;
+    if (item) { item.status = st; item.busy = true; render(); }
     post({ action: 'admin_set', row: Number(b.dataset.row), id: b.dataset.id, status: st }).then(function (res) {
       if (!res.ok) throw new Error(res.error);
-      toast(st + 'にしました' + (res.sent ? '（LINEで連絡済み）' : ''));
-      return load();
-    }).catch(function (err) { toast(err.message || 'エラー'); load(); });
+      if (item) { item.busy = false; if (res.sent) item.sent = '送信済み'; render(); }
+      toast(st + 'にしました' + (res.sent ? '（LINEで連絡しました）' : ''));
+    }).catch(function (err) {
+      if (item) { item.status = before; item.busy = false; render(); }
+      toast('保存できませんでした：' + (err.message || 'エラー'));
+    });
   }
 });
 $('loginBtn').addEventListener('click', login);
