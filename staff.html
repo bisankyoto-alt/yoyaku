@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Bisan スタッフ</title>
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com">
@@ -44,6 +47,7 @@
   main{max-width:760px;margin:0 auto;padding:4px 16px 40px}
   .empty{color:var(--muted);text-align:center;padding:36px 0;font-size:14px;line-height:1.7}
   .day{font-size:13px;font-weight:700;color:var(--olive);margin:18px 0 4px}
+  .newver{position:fixed;left:12px;right:12px;bottom:16px;z-index:11;background:var(--clay);color:#fff;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,.2)}
   .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10;max-width:90%}
   .toast.show{opacity:1}
   /* 予約 */
@@ -170,8 +174,10 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<button class="newver hide" id="newver">新しいバージョンがあります。タップして更新</button>
 
 <script>
+var APP_VERSION = '2026-09-25b';   // 画面を更新したら version.json と一緒に変える
 var API = 'https://script.google.com/macros/s/AKfycbwHymunhy03Jy9Ud4jxqqbuO7kQfmx45LUVUsu6z4Ipw56S_3H4XbPa27XFZqUaR1k/exec';
 
 var $ = function (id) { return document.getElementById(id); };
@@ -229,7 +235,7 @@ function doLogin() {
     store('bisanStaffToken', TOKEN); store('bisanStaffMe', JSON.stringify(ME));
     $('loginErr').textContent = '';
     var got = { resv: false, zaiko: false };
-    if (res.resv && res.resv.ok) { R = res.resv; store('bisanStaffResv', JSON.stringify(R)); got.resv = true; }
+    if (res.resv && res.resv.ok) { R = res.resv; R.at = Date.now(); store('bisanStaffResv', JSON.stringify(R)); got.resv = true; }
     if (res.zaiko && res.zaiko.ok) { setZaiko(res.zaiko); got.zaiko = true; }
     startApp(got);
   }).catch(function () { CODE = ''; renderDots(); $('loginErr').textContent = '通信できませんでした。もう一度お試しください。'; });
@@ -237,6 +243,13 @@ function doLogin() {
 function logout() {
   TOKEN = null; ME = null; store('bisanStaffToken', null); store('bisanStaffMe', null);
   showLogin();
+}
+/* ログアウトボタン：保存が終わってから。お店の共用スマホでも前の人のデータを残さない */
+function userLogout() {
+  if (QUEUE.length) { toast('在庫の保存がまだ終わっていません（残り' + QUEUE.length + '件）。電波の良い所で少し待ってください'); flush(); return; }
+  ['bisanStaffResv', 'bisanStaffZaiko'].forEach(function (k) { store(k, null); });
+  R = null; Z = null;
+  logout();
 }
 
 /* ========== 共通 ========== */
@@ -260,19 +273,30 @@ function setSec(s) {
   syncLabel();
 }
 function setSync(t) { $('sync').textContent = t || ''; }
-function syncLabel() { setSync(SEC === 'zaiko' && QUEUE.length ? '在庫を保存中… 残り' + QUEUE.length + '件' : ''); }
+function hm(t) { var d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+function syncLabel() {
+  if (SEC === 'zaiko' && QUEUE.length) return setSync('在庫を保存中… 残り' + QUEUE.length + '件');
+  var D = SEC === 'zaiko' ? Z : R;
+  if (!D || !D.at) return setSync('');
+  var old = Date.now() - D.at > 5 * 60000;
+  setSync((LOADING[SEC] ? '最新を読み込み中…　' : '') + hm(D.at) + ' 時点の内容' + (old ? '（古い可能性があります。「更新」を押してください）' : ''));
+}
+var LOADING = { resv: false, zaiko: false };
 
 /* ========== 予約 ========== */
 var R = JSON.parse(store('bisanStaffResv') || 'null'), RTAB = 'pend', REASON_ID = null;
-function loadResv() {
-  return post({ action: 'admin_list' }).then(function (res) {
+function loadResv(fresh) {
+  LOADING.resv = true; syncLabel();
+  return post({ action: 'admin_list', fresh: !!fresh }).then(function (res) {
+    LOADING.resv = false;
     if (!res.ok) throw new Error(res.error);
+    res.at = Date.now();
     if (R) {   // 保存中の予約は画面の状態を優先
       var busy = {}; R.list.forEach(function (x) { if (x.busy) busy[x.id] = x; });
       res.list = res.list.map(function (x) { return busy[x.id] || x; });
     }
-    R = res; store('bisanStaffResv', JSON.stringify(R)); renderResv();
-  }).catch(function (e) { if (!R) $('resvView').innerHTML = '<div class="empty">予約を読み込めませんでした<br>' + esc(e.message) + '</div>'; });
+    R = res; store('bisanStaffResv', JSON.stringify(R)); renderResv(); syncLabel();
+  }).catch(function (e) { LOADING.resv = false; syncLabel(); if (!R) $('resvView').innerHTML = '<div class="empty">予約を読み込めませんでした<br>' + esc(e.message) + '</div>'; });
 }
 function badge(s) {
   var c = s === '承認待ち' ? 'b-pend' : s === '確定' ? 'b-ok' : s === 'キャンセル待ち' ? 'b-wait' : 'b-off';
@@ -363,14 +387,16 @@ function rsave(id, row, st, reason) {
 var Z = JSON.parse(store('bisanStaffZaiko') || 'null');
 var QUEUE = JSON.parse(store('bisanStaffZQueue') || '[]');
 var CAT = 'すべて', OPEN = null, ZTAB = 'list', SENDING = false;
-function loadZaiko() {
-  return post({ action: 'z_data' }).then(function (res) {
+function loadZaiko(fresh) {
+  LOADING.zaiko = true; syncLabel();
+  return post({ action: 'z_data', fresh: !!fresh }).then(function (res) {
+    LOADING.zaiko = false;
     if (!res.ok) throw new Error(res.error);
     setZaiko(res);
-  }).catch(function (e) { if (!Z) $('items').innerHTML = '<div class="empty">在庫を読み込めませんでした<br>' + esc(e.message) + '</div>'; });
+  }).catch(function (e) { LOADING.zaiko = false; syncLabel(); if (!Z) $('items').innerHTML = '<div class="empty">在庫を読み込めませんでした<br>' + esc(e.message) + '</div>'; });
 }
 function setZaiko(res) {
-  Z = { items: res.items, ins: res.ins || [], recent: res.recent || [] };
+  Z = { items: res.items, ins: res.ins || [], recent: res.recent || [], at: Date.now() };
   QUEUE.forEach(function (q) { applyLocal(q, true); });
   store('bisanStaffZaiko', JSON.stringify(Z)); renderZaiko();
 }
@@ -550,14 +576,53 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'Enter' && e.target && e.target.id === 'num') { var s = document.querySelector('[data-act=save]'); if (s) s.click(); }
 });
 $('q').addEventListener('input', renderZaiko);
-$('logout').addEventListener('click', logout);
-$('reload').addEventListener('click', function () { Promise.all([loadResv(), loadZaiko()]).then(function () { toast('更新しました'); }); });
-window.addEventListener('online', flush);
-setInterval(function () {
-  if (!TOKEN || document.hidden) return;
+$('logout').addEventListener('click', userLogout);
+$('reload').addEventListener('click', function () {   // サーバー側の一時保存も消して読み直す
+  checkVersion();
+  Promise.all([loadResv(true), QUEUE.length ? null : loadZaiko(true)]).then(function () { toast('最新にしました'); });
+});
+window.addEventListener('online', function () { flush(); refreshAll(); });
+
+/* 最新のデータを取り直す（入力中は邪魔しない） */
+function refreshAll() {
+  if (!TOKEN) return;
   if (!REASON_ID) loadResv();
   if (!QUEUE.length && !OPEN) loadZaiko();
-}, 60000);
+}
+/* 新しいバージョンの画面が出ていたら、自動で読み込み直す（入力中・保存中は待つ） */
+var NEWVER = null;
+function checkVersion() {
+  return fetch('version.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) {
+    if (!j || !j.v || j.v === APP_VERSION) return;
+    NEWVER = j.v;
+    if (!QUEUE.length && !OPEN && !REASON_ID && !busyResv()) reloadNow();
+    else $('newver').classList.remove('hide');
+  }).catch(function () {});
+}
+function busyResv() { return R && R.list.some(function (x) { return x.busy; }); }
+function reloadNow() {
+  // 同じバージョンへの読み込み直しは1回だけ（配信が追いついていないときに繰り返さない）
+  var tried = null; try { tried = sessionStorage.getItem('bisanReloadTried'); } catch (e) {}
+  if (tried === NEWVER) { $('newver').classList.remove('hide'); return; }
+  try { sessionStorage.setItem('bisanReloadTried', NEWVER); } catch (e) {}
+  location.replace(location.pathname + '?v=' + encodeURIComponent(NEWVER || Date.now()));
+}
+$('newver').addEventListener('click', function () {
+  if (QUEUE.length) { toast('在庫の保存が終わってから更新します'); flush(); return; }
+  location.replace(location.pathname + '?v=' + encodeURIComponent((NEWVER || '') + '-' + Date.now()));
+});
+// アプリに戻ってきたとき（スマホの画面を付けた・タブを切り替えた）にすぐ最新にする
+var lastBack = 0;
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) return;
+  if (Date.now() - lastBack < 15000) return;
+  lastBack = Date.now();
+  checkVersion(); refreshAll(); syncLabel();
+});
+window.addEventListener('pageshow', function (e) { if (e.persisted) { checkVersion(); refreshAll(); } });   // 戻るボタンで復元されたとき
+setInterval(function () { if (!document.hidden) { refreshAll(); syncLabel(); } }, 60000);
+setInterval(function () { if (!document.hidden) checkVersion(); }, 5 * 60000);
+checkVersion();
 
 if (TOKEN && ME) startApp(); else showLogin();
 </script>
