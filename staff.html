@@ -202,9 +202,11 @@ function post(body) {
 
 /* ========== ログイン（スタッフコード） ========== */
 var CODE = '';
+function warm() { try { fetch(API + '?action=ping', { cache: 'no-store' }).catch(function () {}); } catch (e) {} }
 function showLogin() {
   $('app').classList.add('hide'); $('login').classList.remove('hide');
   CODE = ''; renderPad();
+  warm();   // コードを押している間にサーバーを起こしておく
 }
 function renderPad() {
   var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '消す', '0', 'OK'];
@@ -226,7 +228,10 @@ function doLogin() {
     TOKEN = res.token; ME = res.me;
     store('bisanStaffToken', TOKEN); store('bisanStaffMe', JSON.stringify(ME));
     $('loginErr').textContent = '';
-    startApp();
+    var got = { resv: false, zaiko: false };
+    if (res.resv && res.resv.ok) { R = res.resv; store('bisanStaffResv', JSON.stringify(R)); got.resv = true; }
+    if (res.zaiko && res.zaiko.ok) { setZaiko(res.zaiko); got.zaiko = true; }
+    startApp(got);
   }).catch(function () { CODE = ''; renderDots(); $('loginErr').textContent = '通信できませんでした。もう一度お試しください。'; });
 }
 function logout() {
@@ -236,13 +241,16 @@ function logout() {
 
 /* ========== 共通 ========== */
 var SEC = store('bisanStaffSec') || 'resv';
-function startApp() {
+function startApp(got) {
+  got = got || {};
   $('login').classList.add('hide'); $('app').classList.remove('hide');
   $('meName').textContent = ME.name;
   setSec(SEC);
   if (R) renderResv(); else $('resvView').innerHTML = '<div class="empty">読み込み中…</div>';
   if (Z) renderZaiko(); else $('items').innerHTML = '<div class="empty">読み込み中…</div>';
-  loadResv(); loadZaiko(); flush();
+  if (!got.resv) loadResv();
+  if (!got.zaiko) loadZaiko();
+  flush();
 }
 function setSec(s) {
   SEC = s; store('bisanStaffSec', s);
@@ -358,10 +366,13 @@ var CAT = 'すべて', OPEN = null, ZTAB = 'list', SENDING = false;
 function loadZaiko() {
   return post({ action: 'z_data' }).then(function (res) {
     if (!res.ok) throw new Error(res.error);
-    Z = { items: res.items, ins: res.ins || [], recent: res.recent || [] };
-    QUEUE.forEach(function (q) { applyLocal(q, true); });
-    store('bisanStaffZaiko', JSON.stringify(Z)); renderZaiko();
+    setZaiko(res);
   }).catch(function (e) { if (!Z) $('items').innerHTML = '<div class="empty">在庫を読み込めませんでした<br>' + esc(e.message) + '</div>'; });
+}
+function setZaiko(res) {
+  Z = { items: res.items, ins: res.ins || [], recent: res.recent || [] };
+  QUEUE.forEach(function (q) { applyLocal(q, true); });
+  store('bisanStaffZaiko', JSON.stringify(Z)); renderZaiko();
 }
 function applyOp(stock, q) { var v = q.kind === 'use' ? stock - q.qty : q.kind === 'in' ? stock + q.qty : q.qty; return v < 0 ? 0 : v; }
 function applyLocal(q, withRecords) {
